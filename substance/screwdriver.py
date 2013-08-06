@@ -55,7 +55,7 @@ class ScrewDriver(object):
     config = self.get_project_config()
 
     # 1. Clone/pull all sub-modules
-    Actions.pull(self.root_dir, config, args)
+    self.pull(args)
 
     # 2. Install all shared node modules
     node_modules = config["node_modules"] if "node_modules" in config else {}

@@ -11,7 +11,7 @@ from substance.screwdriver import ScrewDriver
 
 parser = argparse.ArgumentParser(description='Update the mothership.')
 
-parser.add_argument('--update', '-u', action='store_const', dest="action", const="pull", help='Update the whole project (pull and build).')
+parser.add_argument('--update', '-u', action='store_const', dest="action", const="update", help='Update the whole project (pull and build).')
 parser.add_argument('--git', nargs='?', const=True, default=False, help='Execute a git command on all modules. All arguments after "--" are passed to git.')
 parser.add_argument('--checkout', action='store_const', dest="action", const="checkout", help='Checkout the module versions as specified in project.json.')
 parser.add_argument('--push', action='store_const', dest="action", const="push", help='Push the current branches to origin.')
