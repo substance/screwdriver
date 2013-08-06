@@ -112,4 +112,28 @@ This creates branches and updates `project.json` to reflect these versions.
 You should review the change and commit it in the new branch.
 After that you can use the `push` option to push the branches.
 
- 
+However, in cases where you are just working on a single or only a few modules you would create the branches and adapt the `project.json` manually.
+
+
+### Contributing / Forking
+
+To contribute to Substance you should clone the Substance stack first.
+
+Then you should create your personal fork of the module you want contribute to:
+see [here](https://help.github.com/articles/fork-a-repo) for explanations.
+
+After that you should adapt the `project.json` to use your personal fork. E.g.,
+
+```json
+{
+  "modules": [
+    ...
+    {
+      "repository": "git@github.com:oliver----/chronicle.git",
+      "folder": "node_modules/substance-chronicle",
+      "branch": "my_feature"
+    },
+    ...
+  ]
+}
+```
