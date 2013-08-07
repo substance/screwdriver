@@ -1,4 +1,4 @@
-Substance ScrewDriver
+Substance Screwdriver
 =====================
 
 A custom python application that serves as command line tool to manage Substance applications.
@@ -7,7 +7,7 @@ A custom python application that serves as command line tool to manage Substance
 Installation
 ------------
 
-Clone the ScrewDriver repository into some arbitrary folder:
+Clone the Screwdriver repository into some arbitrary folder:
 
 ```bash
     $ git clone https://github.com/substance/screwdriver.git
@@ -20,7 +20,7 @@ Run setup:
     $ sudo python setup.py install
 ```
 
-Ǹow you should be able to run the ScrewDriver app from command line:
+Ǹow you should be able to run the Screwdriver app from command line:
 
 ```bash
     $ substance --help
@@ -29,7 +29,7 @@ Run setup:
 Uninstall
 ---------
 
-To be able to uninstall Substance ScrewDriver you have to install it using:
+To be able to uninstall Substance Screwdriver you have to install it using:
 
 ```bash
     $ cd screwdriver
