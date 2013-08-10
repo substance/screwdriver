@@ -18,7 +18,7 @@ def git_pull(root, module):
     p.communicate()
 
   else:
-    cmd = ["git", "pull"]
+    cmd = ["git", "pull", "origin", module["branch"]]
     print("Pulling sub-module: %s, (%s)" %(module["folder"], " ".join(cmd)))
     p = subprocess.Popen(cmd, cwd=module_dir)
     p.communicate()
