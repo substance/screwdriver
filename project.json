@@ -3,7 +3,7 @@
     {
       "repository": "git@github.com:substance/screwdriver.git",
       "folder": ".",
-      "version": "master"
+      "branch": "master"
     }
   ]
 }
