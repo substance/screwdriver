@@ -155,11 +155,18 @@ class ScrewDriver(object):
   def bundle(self, args=None):
     config = self.get_project_config()
 
+    options = []
+    if args["bundle"] != None:
+      options = args["bundle"].split(",");
+      options = [o.strip() for o in options]
+
     if "bundle" in config:
-      print("Bundling....");
       bundle_config = config["bundle"]
-      dist_folder = os.path.join(self.root_dir, bundle_config["dist_folder"])
-      output_file = os.path.join(dist_folder, bundle_config["name"]) + ".js"
+
+      print("Bundling....");
+      name = bundle_config["name"]
+      dist_folder = os.path.join(self.root_dir, bundle_config["folder"])
+      bundled_script = os.path.join(dist_folder, name) + ".js"
 
       if not os.path.exists(dist_folder):
         print("Creating bundle folder: %s" %dist_folder)
@@ -168,23 +175,58 @@ class ScrewDriver(object):
       print("Creating bundled script...")
       # browserifying
       browserify_options = []
-      cmd = ["browserify", bundle_config["source"], "-o", output_file] + browserify_options
+      cmd = ["browserify", bundle_config["source"], "-o", bundled_script] + browserify_options
       print(" ".join(cmd))
       p = subprocess.Popen(cmd, cwd=self.root_dir)
       p.communicate()
 
       # uglifying
-      uglifyjs_options = ["-c", "-m"]
-      cmd = ["uglifyjs", output_file, "-o", output_file] + uglifyjs_options
-      print(" ".join(cmd))
-      p = subprocess.Popen(cmd, cwd=self.root_dir)
-      p.communicate()
+      if not "nominify" in options:
+        uglifyjs_options = ["-c", "-m"]
+        cmd = ["uglifyjs", bundled_script, "-o", bundled_script] + uglifyjs_options
+        print(" ".join(cmd))
+        p = subprocess.Popen(cmd, cwd=self.root_dir)
+        p.communicate()
 
-      # assets
+      # process the template index file
+      index_file = os.path.join(self.root_dir, bundle_config["index"])
+      output_index_file = os.path.join(dist_folder, "index.html")
+      index_content = ""
+      with open(index_file, "r") as f:
+        index_content = f.read()
+      include_style = "<link href='%s' rel='stylesheet' type='text/css'/>"%(name + ".css")
+      include_script = "<script src='%s'></script>"%(name + ".js")
+      index_content = index_content.replace("#####styles#####", include_style)
+      index_content = index_content.replace("#####scripts#####", include_script)
+      with open(output_index_file, "w") as f:
+        f.write(index_content)
+
+      # Stitch all CSS files and store it into <folder>/<name>.css
+      print("Creating a unified style sheet...")
+
+      styles = config["styles"]
+      stitched_styles = []
+      for _, p in styles.iteritems():
+        css_file = os.path.join(self.root_dir, p)
+        with open(css_file, "r") as f:
+          stitched_styles.append(f.read())
+      stitched_styles = "\n".join(stitched_styles)
+      stitched_file = os.path.join(dist_folder, name) + ".css"
+      with open(stitched_file, "w") as f:
+        f.write(stitched_styles)
+
+      # Copy all assets
       print("Copying assets...")
-      for entry in bundle_config["assets"]:
-        source = os.path.join(self.root_dir, entry)
-        dest = os.path.join(dist_folder, entry)
+
+      assets = config["assets"]
+      for alias, p in assets.iteritems():
+        source = os.path.join(self.root_dir, p)
+        dest = os.path.join(dist_folder, alias)
+
+        parent = os.path.dirname(dest)
+        if not os.path.exists(parent):
+          os.makedirs(parent)
+
         if os.path.isdir(source):
           dir_util.copy_tree(source, dest)
         else:
