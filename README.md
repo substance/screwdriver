@@ -26,6 +26,12 @@ Run setup:
     $ substance --help
 ```
 
+For creating bundles you need `browserify` and `uglifyjs`:
+
+```bash
+    $ sudo npm install -g browserify uglify-js
+```
+
 Uninstall
 ---------
 
@@ -95,6 +101,34 @@ To do special `git` related things on all sub-modules it is possible to run
 ```
 
 Notice the separation `--` which are necessary to distinct arguments passed to the ScrewDriver from `git` arguments.
+
+### Creating a Bundle
+
+You need a `bundle` section in your `project.json`, for example:
+
+```json
+  "bundle": {
+    "name": "substance",
+    "dist_folder": "./dist",
+    "source": "src/substance.js",
+    "assets": [
+      "index.html",
+      "styles"
+    ]
+  }
+```
+
+- `name`: the name of the bundle
+- `dist_folder`: the relative path to a directory
+- `source`: the root source file
+- `assets`: an array of relative paths to resources to be copied into the dist folder;
+  directories are copied recursively
+
+To create a bundle run:
+
+```bash
+    $ substance --bundle
+```
 
 
 Workflows
