@@ -3,6 +3,7 @@ import argparse
 import os
 import sys
 import subprocess
+from distutils import file_util, dir_util
 
 from util import read_json, project_file, module_file
 from git import git_pull, git_push, git_checkout, git_command, git_status, git_fetch
@@ -119,7 +120,7 @@ class ScrewDriver(object):
     table = {}
     for m, __, conf in iterate_modules(self.root_dir, config):
       table[conf["name"]] = m
-    
+
     if "node_modules" in config:
       table.update(config["node_modules"])
 
@@ -150,3 +151,44 @@ class ScrewDriver(object):
 
   def serve(self, args=None):
     node_server(self.root_dir)
+
+  def bundle(self, args=None):
+    config = self.get_project_config()
+
+    if "bundle" in config:
+      print("Bundling....");
+      bundle_config = config["bundle"]
+      dist_folder = os.path.join(self.root_dir, bundle_config["dist_folder"])
+      output_file = os.path.join(dist_folder, bundle_config["name"]) + ".js"
+
+      if not os.path.exists(dist_folder):
+        print("Creating bundle folder: %s" %dist_folder)
+        os.makedirs(dist_folder)
+
+      print("Creating bundled script...")
+      # browserifying
+      browserify_options = []
+      cmd = ["browserify", bundle_config["source"], "-o", output_file] + browserify_options
+      print(" ".join(cmd))
+      p = subprocess.Popen(cmd, cwd=self.root_dir)
+      p.communicate()
+
+      # uglifying
+      uglifyjs_options = ["-c", "-m"]
+      cmd = ["uglifyjs", output_file, "-o", output_file] + uglifyjs_options
+      print(" ".join(cmd))
+      p = subprocess.Popen(cmd, cwd=self.root_dir)
+      p.communicate()
+
+      # assets
+      print("Copying assets...")
+      for entry in bundle_config["assets"]:
+        source = os.path.join(self.root_dir, entry)
+        dest = os.path.join(dist_folder, entry)
+        if os.path.isdir(source):
+          dir_util.copy_tree(source, dest)
+        else:
+          file_util.copy_file(source, dest)
+
+    else:
+      print("No bundle configuration available...");
