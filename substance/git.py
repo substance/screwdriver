@@ -6,7 +6,6 @@ def git_pull(root, module):
 
   if not os.path.exists(module_dir):
     print("Cloning sub-module: %s" %module["folder"])
-
     parent_dir, name = os.path.split(module_dir)
 
     if not os.path.exists(parent_dir):
@@ -31,7 +30,7 @@ def git_push(root, module):
   p = subprocess.Popen(cmd, cwd=module_dir)
   p.communicate()
 
-def git_checkout(root, module, args):
+def git_checkout(root, module):
   module_dir = os.path.join(root, module["folder"])
   branch = module["branch"]
 
@@ -40,9 +39,15 @@ def git_checkout(root, module, args):
   p = subprocess.Popen(cmd, cwd=module_dir)
   p.communicate()
 
+def git_fetch(root, module):
+  module_dir = os.path.join(root, module["folder"])
+  branch = module["branch"]
+  cmd = ["git", "fetch", "origin"]
+  p = subprocess.Popen(cmd, cwd=module_dir)
+  p.communicate()
+
 def git_command(root, module, argv):
   module_dir = os.path.join(root, module["folder"])
-
   cmd = ["git"] + argv
   print("%s $ git command: %s"%(module["folder"], cmd))
   p = subprocess.Popen(cmd, cwd=module_dir)

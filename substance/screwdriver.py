@@ -5,7 +5,7 @@ import sys
 import subprocess
 
 from util import read_json, project_file, module_file
-from git import git_pull, git_push, git_checkout, git_command, git_status
+from git import git_pull, git_push, git_checkout, git_command, git_status, git_fetch
 from npm import npm_publish, npm_install, node_server
 from version import increment_version, bump_version, create_package, create_tag, \
   save_current_version, restore_last_version, create_branch
@@ -53,9 +53,13 @@ class ScrewDriver(object):
 
   def update(self, args=None):
     config = self.get_project_config()
-
-    # 1. Clone/pull all sub-modules
-    self.pull(args)
+    for m in config["modules"]:
+      module_dir = os.path.join(self.root_dir, m["folder"])
+      git_status(self.root_dir, m)
+      if os.path.exists(module_dir):
+        git_fetch(self.root_dir, m)
+        git_checkout(self.root_dir, m)
+      git_pull(self.root_dir, m)
 
     # 2. Install all shared node modules
     node_modules = config["node_modules"] if "node_modules" in config else {}
@@ -77,6 +81,7 @@ class ScrewDriver(object):
   def pull(self, args=None):
     config = self.get_project_config()
     for m in config["modules"]:
+      git_fetch(self.root_dir, m)
       git_pull(self.root_dir, m)
 
   def push(self, args=None):
