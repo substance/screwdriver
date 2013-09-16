@@ -56,7 +56,6 @@ class ScrewDriver(object):
     config = self.get_project_config()
     for m in config["modules"]:
       module_dir = os.path.join(self.root_dir, m["folder"])
-      git_status(self.root_dir, m)
       if os.path.exists(module_dir):
         git_fetch(self.root_dir, m)
         git_checkout(self.root_dir, m)
