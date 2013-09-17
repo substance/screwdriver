@@ -92,7 +92,7 @@ class ScrewDriver(object):
   def checkout(self, args=None):
     config = self.get_project_config()
     for m in config["modules"]:
-      git_checkout(self.root_dir, m, args)
+      git_checkout(self.root_dir, m)
 
   def git(self, args):
     config = self.get_project_config()
