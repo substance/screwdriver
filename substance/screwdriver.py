@@ -153,7 +153,7 @@ class ScrewDriver(object):
       bump_version(folder, conf)
 
   def serve(self, args=None):
-    node_server(self.root_dir)
+    node_server(self.root_dir, args)
 
   def bundle(self, args=None):
     config = self.get_project_config()

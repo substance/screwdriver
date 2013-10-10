@@ -64,7 +64,9 @@ def npm_install(root, node_modules):
     p = subprocess.Popen(cmd, cwd=root)
     p.communicate();
 
-def node_server(root):
+def node_server(root, args):
     cmd = ["node", "server"]
+    if "argv" in args:
+      cmd = cmd + args["argv"]
     p = subprocess.Popen(cmd, cwd=root)
     p.communicate();
