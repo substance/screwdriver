@@ -119,6 +119,9 @@ class ScrewDriver(object):
     # prepare a lookup table for module versions
     table = {}
     for m, __, conf in iterate_modules(self.root_dir, config):
+      # add the registered module version
+      # this is used for releases
+      m["version"] = conf["version"];
       table[conf["name"]] = m
 
     if "node_modules" in config:

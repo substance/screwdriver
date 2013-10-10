@@ -108,8 +108,10 @@ def replace_deps(config, table, deps, tag=None, github=True):
 
         if tag != None:
           version = tag
-        else:
+        elif github:
           version = module["branch"]
+        else:
+          version = module["version"]
 
         # in case we have a module specification it is possible to create
         # the dependency entry as "git+https"
