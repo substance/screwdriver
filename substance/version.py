@@ -133,13 +133,13 @@ def replace_deps(config, table, deps, tag=None, github=True):
       if deps[dep] == "":
         raise RuntimeError("Incomplete specification %s in %s"%(dep, config["name"]));
 
-def create_package(folder, config, table, tag=None, github=True):
+def create_package(folder, config, table, tag=None, release=False):
   """
     Creates 'package.json' based on 'module.json'.
   """
 
-  replace_deps(config, table, "dependencies", tag, github)
-  replace_deps(config, table, "devDependencies", tag, github)
+  replace_deps(config, table, "dependencies", tag, not release)
+  replace_deps(config, table, "devDependencies", tag, not release)
 
   filename = os.path.join(folder, "package.json")
   print("Writing %s"%(filename))

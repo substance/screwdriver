@@ -113,7 +113,8 @@ class ScrewDriver(object):
 
   def package(self, args=None):
     config = self.get_project_config()
-    tag = args["package"]
+    release = (args["package"] == "release")
+    tag = args["tag"] if "tag" in args else None
 
     # prepare a lookup table for module versions
     table = {}
@@ -126,7 +127,7 @@ class ScrewDriver(object):
     for __, folder, conf in iterate_modules(self.root_dir, config):
       if "npm" in config:
         conf.update(config["npm"])
-      create_package(folder, conf, table, tag)
+      create_package(folder, conf, table, tag=tag, release=release)
 
   def tag(self, args=None):
     config = self.get_project_config()
