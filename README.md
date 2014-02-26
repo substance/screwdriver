@@ -149,6 +149,12 @@ After that you can use the `push` option to push the branches.
 However, in cases where you are just working on a single or only a few modules you would create the branches and adapt the `project.json` manually.
 
 
+### Packaging
+
+```
+substance --package=release
+```
+
 ### Contributing / Forking
 
 To contribute to Substance you should clone the Substance stack first.
