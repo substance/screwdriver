@@ -149,7 +149,16 @@ After that you can use the `push` option to push the branches.
 However, in cases where you are just working on a single or only a few modules you would create the branches and adapt the `project.json` manually.
 
 
-### Packaging
+### Releasing / packaging
+
+1. Switch to the release branch for all projects. 
+2. Pull in the changes from master for every projects (stuff you want to release)
+3. Run `substance --package=release`
+4. Commit changes into release branch
+5. Tag the release `git tag 0.3.4 && git push origin --tags` 
+5. back to master: git checkout master (move on with development)
+
+
 
 ```
 substance --package=release
