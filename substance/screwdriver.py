@@ -171,6 +171,8 @@ class ScrewDriver(object):
       dist_folder = os.path.join(self.root_dir, bundle_config["folder"])
       bundled_script = os.path.join(dist_folder, name) + ".js"
 
+      ignores = bundle_config["ignores"]
+
       if not os.path.exists(dist_folder):
         print("Creating bundle folder: %s" %dist_folder)
         os.makedirs(dist_folder)
@@ -178,7 +180,13 @@ class ScrewDriver(object):
       print("Creating bundled script...")
       # browserifying
       browserify_options = []
+
+      for fileName in ignores:
+        browserify_options.append('-i')
+        browserify_options.append(fileName)
+
       cmd = ["browserify", bundle_config["source"], "-o", bundled_script] + browserify_options
+
       print(" ".join(cmd))
       p = subprocess.Popen(cmd, cwd=self.root_dir)
       p.communicate()
