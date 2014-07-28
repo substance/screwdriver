@@ -171,7 +171,9 @@ class ScrewDriver(object):
       dist_folder = os.path.join(self.root_dir, bundle_config["folder"])
       bundled_script = os.path.join(dist_folder, name) + ".js"
 
-      ignores = bundle_config["ignores"]
+      ignores = []
+      if "ignores" in bundle_config:
+        ignores = bundle_config["ignores"]
 
       if not os.path.exists(dist_folder):
         print("Creating bundle folder: %s" %dist_folder)
