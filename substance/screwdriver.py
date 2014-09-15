@@ -168,8 +168,9 @@ class ScrewDriver(object):
 
       print("Bundling....");
       name = bundle_config["name"]
-      dist_folder = os.path.join(self.root_dir, bundle_config["folder"])
-      bundled_script = os.path.join(dist_folder, name) + ".js"
+      dist_folder = os.path.abspath(os.path.join(self.root_dir, bundle_config["folder"]))
+      bundled_script = os.path.abspath(os.path.join(dist_folder, name) + ".js")
+      boot_script = os.path.abspath(bundle_config["source"])
 
       ignores = []
       if "ignores" in bundle_config:
@@ -187,7 +188,7 @@ class ScrewDriver(object):
         browserify_options.append('-i')
         browserify_options.append(fileName)
 
-      cmd = ["browserify", bundle_config["source"], "-o", bundled_script] + browserify_options
+      cmd = ["browserify", boot_script, "-o", bundled_script] + browserify_options
 
       print(" ".join(cmd))
       p = subprocess.Popen(cmd, cwd=self.root_dir)
@@ -202,17 +203,18 @@ class ScrewDriver(object):
         p.communicate()
 
       # process the template index file
-      index_file = os.path.join(self.root_dir, bundle_config["index"])
-      output_index_file = os.path.join(dist_folder, "index.html")
-      index_content = ""
-      with open(index_file, "r") as f:
-        index_content = f.read()
-      include_style = "<link href='%s' rel='stylesheet' type='text/css'/>"%(name + ".css")
-      include_script = "<script src='%s'></script>"%(name + ".js")
-      index_content = index_content.replace("#####styles#####", include_style)
-      index_content = index_content.replace("#####scripts#####", include_script)
-      with open(output_index_file, "w") as f:
-        f.write(index_content)
+      index_file = os.path.abspath(os.path.join(self.root_dir, bundle_config["index"]))
+      if os.path.exists(index_file):
+        output_index_file = os.path.abspath(os.path.join(dist_folder, "index.html"))
+        index_content = ""
+        with open(index_file, "r") as f:
+          index_content = f.read()
+        include_style = "<link href='%s' rel='stylesheet' type='text/css'/>"%(name + ".css")
+        include_script = "<script src='%s'></script>"%(name + ".js")
+        index_content = index_content.replace("#####styles#####", include_style)
+        index_content = index_content.replace("#####scripts#####", include_script)
+        with open(output_index_file, "w") as f:
+          f.write(index_content)
 
       # Stitch all CSS files and store it into <folder>/<name>.css
       print("Creating a unified style sheet...")
@@ -223,10 +225,11 @@ class ScrewDriver(object):
         css_file = os.path.join(self.root_dir, p)
         with open(css_file, "r") as f:
           stitched_styles.append(f.read())
-      stitched_styles = "\n".join(stitched_styles)
-      stitched_file = os.path.join(dist_folder, name) + ".css"
-      with open(stitched_file, "w") as f:
-        f.write(stitched_styles)
+      if len(stitched_styles) > 0:
+        stitched_styles = "\n".join(stitched_styles)
+        stitched_file = os.path.join(dist_folder, name) + ".css"
+        with open(stitched_file, "w") as f:
+          f.write(stitched_styles)
 
       # Copy all assets
       print("Copying assets...")
