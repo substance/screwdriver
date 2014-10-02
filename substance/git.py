@@ -1,5 +1,6 @@
 import subprocess
 import os
+from gitstatus import gitstatus
 
 def git_pull(root, module):
   module_dir = os.path.join(root, module["folder"])
@@ -22,13 +23,21 @@ def git_pull(root, module):
     p = subprocess.Popen(cmd, cwd=module_dir)
     p.communicate()
 
-def git_push(root, module):
+def git_push(root, module, options):
   module_dir = os.path.join(root, module["folder"])
+  if 'remote' in options:
+    remote = options['remote']
+  else:
+    remote = 'origin'
 
-  print("Pushing sub-module: %s" %module["folder"])
-  cmd = ["git", "push", "origin", module["branch"]]
-  p = subprocess.Popen(cmd, cwd=module_dir)
-  p.communicate()
+  # only push if there are local changes
+  stat = gitstatus()
+
+  if (stat['ahead'] > 0):
+    print( "Pushing sub-module %s to %s" %( module["folder"], remote) )
+    cmd = ["git", "push", remote, module["branch"]]
+    p = subprocess.Popen(cmd, cwd=module_dir)
+    p.communicate()
 
 def git_checkout(root, module):
   module_dir = os.path.join(root, module["folder"])
