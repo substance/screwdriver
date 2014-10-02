@@ -28,6 +28,7 @@ parser.add_argument('--package', nargs='?', const=None, default=False, help='Cre
 #parser.add_argument('--save-current-version', action='store_const', dest="action", const="save_current", help='Save the current SHA for each sub-module.')
 #parser.add_argument('--restore-last-version', action='store_const', dest="action", const="restore_last", help='Restore a previously saved version of each sub-module.')
 parser.add_argument('--bundle', nargs='?', const=None, default=False, help='Create a bundle using the configuration given in "project.json". Options: "nominify"')
+parser.add_argument('--each', nargs='?', const=True, default=False, help='Run something for each module "substance --each -- echo \"$module\".')
 parser.add_argument('argv', nargs='*', help='Arguments passed to the command (e.g., git).')
 
 # Main
@@ -50,6 +51,8 @@ elif args["bundle"] != False:
   action = "bundle"
 #elif args["tag"] != False:
 #  action = "tag"
+elif args['each'] != False:
+  action = "each"
 elif action == None:
   action = "serve"
 

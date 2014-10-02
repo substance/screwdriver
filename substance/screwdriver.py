@@ -49,6 +49,8 @@ class ScrewDriver(object):
   def get_project_config(self):
     if self.project_config == None:
       self.project_config = read_json(project_file(self.root_dir))
+      for m in self.project_config["modules"]:
+        m['repoName'] = os.path.basename(m['repository'])
 
     return self.project_config
 
@@ -100,6 +102,29 @@ class ScrewDriver(object):
     argv = args["argv"]
     for m in config["modules"]:
       git_command(self.root_dir, m, argv)
+
+  def replaceModuleVariables(self, m, s):
+    s = s.replace('{{repoName}}', m['repoName'])
+    s = s.replace('{{branch}}', m['branch'])
+    return s
+
+  def prepareArgs(self, m, argv):
+    result = [self.replaceModuleVariables(m, a) for a in argv]
+    return result
+
+  def each(self, args):
+    config = self.get_project_config()
+    argv = args["argv"]
+    for m in config["modules"]:
+      module_dir = os.path.join(self.root_dir, m["folder"])
+      cmd = self.prepareArgs(m, argv)
+      print( "Executing command on sub-module %s: %s" %( m["folder"], ' '.join(cmd) ) )
+      p = subprocess.Popen(cmd, cwd=module_dir)
+      out, err = p.communicate()
+      if out:
+        print(out)
+      if err:
+        print("Error: %s"%err)
 
   def publish(self, args=None):
     config = self.get_project_config()
