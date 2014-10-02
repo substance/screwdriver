@@ -31,7 +31,7 @@ def git_push(root, module, options):
     remote = 'origin'
 
   # only push if there are local changes
-  stat = gitstatus()
+  stat = gitstatus(module_dir)
 
   if (stat['ahead'] > 0):
     print( "Pushing sub-module %s to %s" %( module["folder"], remote) )
