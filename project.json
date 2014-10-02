@@ -1,9 +1,0 @@
-{
-  "modules": [
-    {
-      "repository": "git@github.com:substance/screwdriver.git",
-      "folder": ".",
-      "branch": "master"
-    }
-  ]
-}

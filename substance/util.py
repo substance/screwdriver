@@ -3,8 +3,8 @@ import os
 import types
 from collections import OrderedDict
 
-PROJECT_CONFIG_FILE = "project.json"
-MODULE_CONFIG_FILE = "module.json"
+PROJECT_CONFIG_FILE = ".screwdriver/project.json"
+MODULE_CONFIG_FILE = ".screwdriver/module.json"
 
 def project_file(root):
   return os.path.join(root, PROJECT_CONFIG_FILE)
