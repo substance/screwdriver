@@ -36,8 +36,6 @@ parser.add_argument('argv', nargs='*', help='Arguments passed to the command (e.
 
 args = vars(parser.parse_args())
 
-print(args)
-
 action = args['action']
 if args['git'] != False:
   action = "git"

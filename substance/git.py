@@ -38,6 +38,8 @@ def git_push(root, module, options):
     cmd = ["git", "push", remote, module["branch"]]
     p = subprocess.Popen(cmd, cwd=module_dir)
     p.communicate()
+  else:
+    print("Sub-module %s is already up-to-date."%( module["folder"] ))
 
 def git_checkout(root, module):
   module_dir = os.path.join(root, module["folder"])

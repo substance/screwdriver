@@ -87,7 +87,6 @@ class ScrewDriver(object):
       git_pull(self.root_dir, m)
 
   def push(self, args=None):
-    print(args)
     config = self.get_project_config()
     for m in config["modules"]:
       git_push(self.root_dir, m, args)
