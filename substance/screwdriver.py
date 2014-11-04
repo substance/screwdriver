@@ -213,6 +213,10 @@ class ScrewDriver(object):
         browserify_options.append('-i')
         browserify_options.append(fileName)
 
+      # enable source maps in nominify mode
+      if "sourcemap" in options:
+        browserify_options.append('-d')
+
       cmd = ["browserify", boot_script, "-o", bundled_script] + browserify_options
 
       print(" ".join(cmd))
