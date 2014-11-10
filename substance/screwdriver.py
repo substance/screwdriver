@@ -232,18 +232,19 @@ class ScrewDriver(object):
         p.communicate()
 
       # process the template index file
-      index_file = os.path.abspath(os.path.join(self.root_dir, bundle_config["index"]))
-      if os.path.exists(index_file):
-        output_index_file = os.path.abspath(os.path.join(dist_folder, "index.html"))
-        index_content = ""
-        with open(index_file, "r") as f:
-          index_content = f.read()
-        include_style = "<link href='%s' rel='stylesheet' type='text/css'/>"%(name + ".css")
-        include_script = "<script src='%s'></script>"%(name + ".js")
-        index_content = index_content.replace("#####styles#####", include_style)
-        index_content = index_content.replace("#####scripts#####", include_script)
-        with open(output_index_file, "w") as f:
-          f.write(index_content)
+      if "index" in bundle_config:
+        index_file = os.path.abspath(os.path.join(self.root_dir, bundle_config["index"]))
+        if os.path.exists(index_file):
+          output_index_file = os.path.abspath(os.path.join(dist_folder, "index.html"))
+          index_content = ""
+          with open(index_file, "r") as f:
+            index_content = f.read()
+          include_style = "<link href='%s' rel='stylesheet' type='text/css'/>"%(name + ".css")
+          include_script = "<script src='%s'></script>"%(name + ".js")
+          index_content = index_content.replace("#####styles#####", include_style)
+          index_content = index_content.replace("#####scripts#####", include_script)
+          with open(output_index_file, "w") as f:
+            f.write(index_content)
 
       # Stitch all CSS files and store it into <folder>/<name>.css
       print("Creating a unified style sheet...")
