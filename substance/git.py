@@ -80,3 +80,10 @@ def git_status(root, module, porcelain=True):
     print("%s" %name)
     print("--------\n")
     print(out)
+
+def git_current_sha(root, module):
+  module_dir = os.path.join(root, module["folder"])
+  cmd = ["git", "rev-parse", "HEAD"]
+  p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=module_dir)
+  out, err = p.communicate()
+  return out.strip()

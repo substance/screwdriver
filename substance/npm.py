@@ -60,13 +60,26 @@ def npm_symlinks(root, module):
 
 def npm_install(root, node_modules):
   for m, v in node_modules.iteritems():
+    if v == None:
+      # skip modules with version == None
+      continue
     cmd = ["npm", "install", "%s@%s"%(m, v)]
     p = subprocess.Popen(cmd, cwd=root)
     p.communicate();
 
-def node_server(root, args):
-    cmd = ["node", "server"]
-    if "argv" in args:
-      cmd = cmd + args["argv"]
+def npm_ls(root):
+    cmd = ["npm", "ls"]
     p = subprocess.Popen(cmd, cwd=root)
     p.communicate();
+
+def node_server(root, args):
+  cmd = ["node", "server"]
+  if "argv" in args:
+    cmd = cmd + args["argv"]
+  p = subprocess.Popen(cmd, cwd=root)
+  p.communicate();
+
+def npm_shrinkwrap(root):
+  cmd = ["npm", "shrinkwrap"]
+  p = subprocess.Popen(cmd, cwd=root)
+  p.communicate();

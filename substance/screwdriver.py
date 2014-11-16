@@ -4,36 +4,43 @@ import os
 import sys
 import subprocess
 from distutils import file_util, dir_util
+import copy
 
-from util import read_json, project_file, module_file
-from git import git_pull, git_push, git_checkout, git_command, git_status, git_fetch
-from npm import npm_publish, npm_install, node_server
-from version import increment_version, bump_version, create_package, create_tag, \
-  save_current_version, restore_last_version, create_branch
+from util import read_json, write_json, project_file, package_file
+from git import git_pull, git_push, git_checkout, git_command, git_status, git_fetch, git_current_sha
+from npm import npm_publish, npm_install, node_server, npm_ls, npm_shrinkwrap
+from version import increment_version, bump_version, create_package
 
-def get_module_config(root, module):
-  folder = os.path.join(root, module["folder"])
-  filename = module_file(folder)
+def get_module_config(root, folder):
+  folder = os.path.join(root, folder)
+  filename = package_file(folder)
+  if not os.path.exists(filename):
+    return None
+  return read_json(filename)
+
+def get_package_config(root, folder):
+  folder = os.path.join(root, folder)
+  filename = package_file(folder)
   if not os.path.exists(filename):
     return None
   return read_json(filename)
 
 def iterate_modules(root, config):
   for m in config["modules"]:
-    conf = get_module_config(root, m)
+    conf = get_module_config(root, m["folder"])
     if conf == None: continue
     folder = os.path.join(root, m["folder"])
     yield [m, folder, conf]
 
 
-def get_configured_deps(folder, conf):
+def get_configured_deps(conf, devDependencies=False):
   result = {}
   if "dependencies" in conf:
     for dep, version in conf["dependencies"].iteritems():
       if version != "":
         result[dep] = version
 
-  if "devDependencies" in conf:
+  if devDependencies and "devDependencies" in conf:
     for dep, version in conf["dependencies"].iteritems():
       if version != "":
         result[dep] = version
@@ -51,8 +58,12 @@ class ScrewDriver(object):
       self.project_config = read_json(project_file(self.root_dir))
       for m in self.project_config["modules"]:
         m['repoName'] = os.path.basename(m['repository'])
-
     return self.project_config
+
+  def write_project_config(self, project_config):
+    for m in project_config["modules"]:
+      del m['repoName']
+    write_json(project_file(self.root_dir), project_config)
 
   def update(self, args=None):
     config = self.get_project_config()
@@ -66,9 +77,26 @@ class ScrewDriver(object):
     # 2. Install all shared node modules
     node_modules = config["node_modules"] if "node_modules" in config else {}
     for __, folder, conf in iterate_modules(self.root_dir, config):
-      node_modules.update(get_configured_deps(folder, conf))
+      # remove all managed modules from the install list to avoid npm reinstalling them
+      node_modules[conf['name']] = None
+      deps = get_configured_deps(conf)
+      for name in deps:
+        if not name in node_modules:
+          node_modules[name] = deps[name]
 
+    # add dependencies from package_json
+    package = get_package_config(self.root_dir, ".")
+    deps = get_configured_deps(package, devDependencies=True)
+    for name in deps:
+      if not name in node_modules:
+        node_modules[name] = deps[name]
+
+    # do not re-install projects which are managed already
+    print("");
+    print("Installing dependencies...");
+    print("");
     npm_install(self.root_dir, node_modules)
+    npm_ls(self.root_dir)
 
   def branch(self, args):
     config = self.get_project_config()
@@ -138,9 +166,7 @@ class ScrewDriver(object):
 
   def package(self, args=None):
     config = self.get_project_config()
-    release = (args["package"] == "release")
     tag = args["tag"] if "tag" in args else None
-
     # prepare a lookup table for module versions
     table = {}
     for m, __, conf in iterate_modules(self.root_dir, config):
@@ -148,29 +174,40 @@ class ScrewDriver(object):
       # this is used for releases
       m["version"] = conf["version"];
       table[conf["name"]] = m
-
     if "node_modules" in config:
       table.update(config["node_modules"])
-
-    for __, folder, conf in iterate_modules(self.root_dir, config):
-      if "npm" in config:
-        conf.update(config["npm"])
-      create_package(folder, conf, table, tag=tag, release=release)
+    conf = get_module_config(self.root_dir, ".")
+    create_package(".", conf, table, tag=None)
 
   def tag(self, args=None):
-    config = self.get_project_config()
-    tag = args["tag"]
+    print("Updating project.json...")
+    project_config = copy.deepcopy(self.get_project_config())
+    for m in project_config["modules"]:
+      sha = git_current_sha(self.root_dir, m)
+      print("...%s@%s"%(m['repoName'], sha))
+      m['branch'] = sha
+    self.project_config = project_config
+    self.write_project_config(project_config)
+    self.shrinkwrap()
 
-    table = {}
-    for folder, conf in iterate_modules(self.root_dir, config):
-      table[conf["name"]] = conf
-    if "node_modules" in config:
-      table.update(config["node_modules"])
-
-    for folder, conf in iterate_modules(self.root_dir, config):
-      if "npm" in config:
-        conf.update(config["npm"])
-      create_tag(folder, conf, table, tag)
+  def shrinkwrap(self, args=None):
+    print("Creating npm-shrinkwrap.json...")
+    npm_shrinkwrap(self.root_dir)
+    shrinkwrap_file = os.path.join(self.root_dir, "npm-shrinkwrap.json")
+    shrinkwrap_conf = read_json(shrinkwrap_file)
+    project_config = self.get_project_config()
+    deps = shrinkwrap_conf['dependencies']
+    devDeps = shrinkwrap_conf['devDependencies'] if 'devDependencies' in shrinkwrap_conf else {}
+    for m, __, conf in iterate_modules(self.root_dir, project_config):
+      name = conf['name']
+      repo = "git+%s#%s"%(m['repository'],m['branch'])
+      if name in deps:
+        entry = deps[name]
+        entry['from'] = repo
+      if name in devDeps:
+        entry = deps[name]
+        entry['from'] = repo
+    write_json(shrinkwrap_file, shrinkwrap_conf)
 
   def bump(self, args=None):
     config = self.get_project_config()

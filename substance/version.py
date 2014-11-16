@@ -8,8 +8,8 @@ from util import module_file, read_json, write_json, MODULE_CONFIG_FILE
 
 VERSION_EXPRESSION = re.compile("(\d+)\.(\d+)\.(\d+)(.*)")
 
-"https://github.com/substance/util.git"
-"git@github.com:substance/article.git"
+# "https://github.com/substance/util.git"
+# "git@github.com:substance/article.git"
 
 GITHUB_SSH_URL_EXPR = re.compile("git@github.com:(.+)")
 GITHUB_HTTPS_URL_EXPR = re.compile("https://github.com/(.+)")
@@ -80,7 +80,7 @@ def bump_version(folder, config):
   git_command(folder, ["add", MODULE_CONFIG_FILE])
   git_command(folder, ["commit", "-m", 'Bumped version to %s'%version])
 
-def replace_deps(config, table, deps, tag=None, github=True):
+def replace_deps(config, table, deps, tag=None):
   if not deps in config: return
 
   deps = config[deps]
@@ -97,34 +97,29 @@ def replace_deps(config, table, deps, tag=None, github=True):
   #      "underscore": "1.5.x"
 
   for dep in deps:
-
     # if the dependency is registered globally
     if dep in table:
       module = table[dep]
-
       if isinstance(module, basestring):
         version = module
       else:
-
-        if tag != None:
-          version = tag
-        elif github:
-          version = module["branch"]
-        else:
-          version = module["version"]
-
         # in case we have a module specification it is possible to create
         # the dependency entry as "git+https"
-        if github:
-          repos = module["repository"]
-          match = GITHUB_SSH_URL_EXPR.match(repos)
+        repos = module["repository"]
+        match = GITHUB_SSH_URL_EXPR.match(repos)
+        if (not match):
+          match = GITHUB_HTTPS_URL_EXPR.match(repos)
           if (not match):
-            match = GITHUB_HTTPS_URL_EXPR.match(repos)
-            if (not match):
-              raise RuntimeError("Could not parse repository url: %s"%(repos));
+            raise RuntimeError("Could not parse repository url: %s"%(repos));
+        repos_name = match.group(1);
 
-          repos_name = match.group(1);
-          version = GIT_VERSION_STR%(repos_name, version)
+        print("Module['branch']? %s"%(module["branch"]))
+        if tag != None:
+          version = tag
+        else:
+          version = module["branch"]
+
+        version = GIT_VERSION_STR%(repos_name, version)
 
       print("Replacing dependency: %s = %s"%(dep, version))
       deps[dep] = version
@@ -135,63 +130,24 @@ def replace_deps(config, table, deps, tag=None, github=True):
       if deps[dep] == "":
         raise RuntimeError("Incomplete specification %s in %s"%(dep, config["name"]));
 
-def create_package(folder, config, table, tag=None, release=False):
+def create_package(folder, config, table, tag=None):
   """
     Creates 'package.json' based on 'module.json'.
   """
-
-  replace_deps(config, table, "dependencies", tag, not release)
-  replace_deps(config, table, "devDependencies", tag, not release)
-
+  replace_deps(config, table, "dependencies", tag)
+  replace_deps(config, table, "devDependencies", tag)
   filename = os.path.join(folder, "package.json")
   print("Writing %s"%(filename))
   write_json(filename, config)
 
-def create_tag(folder, config, table, tag=None, github=True):
-  """
-    Creates a new release tag.
-
-    1. Checksout the release branch and brings it up-to-date.
-    2. Creates package.json and commits it.
-    3. Creates a new tag.
-  """
-
-  git_command(folder, ["checkout", "release"])
-  git_command(folder, ["merge", "-s", "recursive", "-X", "theirs"])
-
-  if not "version" in config:
-    print "Could not find version in config of %s"%(folder)
-    return None
-
-  create_package(folder, config, table, tag, github)
-
-  tag = tag if tag != None else config["version"]
-
-  # if it is a semver we add a make it 'vX.Y.Z'
-  if VERSION_EXPRESSION.match(tag):
-    tag = "v"+tag
-
-  # commit the change
-  filename = os.path.join(folder, "package.json")
-  git_command(folder, ["add", filename])
-  git_command(folder, ["commit", "-m", 'Created package.json for version %s'%(tag)])
-  git_command(folder, ["tag", "-a", tag, "-m", 'Version %s.'%(tag)])
-
-
-def save_current_version(modules_iter):
-  current_version={}
-  for folder, conf in modules_iter:
-    HEAD = git_command(folder, ["rev-parse", "HEAD"])
-    HEAD = HEAD.strip()
-    current_version[conf["name"]] = HEAD
-
-  write_json(".version.snapshot.json", current_version)
-
-def restore_last_version(modules_iter):
-  last_version = read_json(".version.snapshot.json")
-  for folder, conf in modules_iter:
-    HEAD = last_version[conf["name"]]
-    git_command(folder, ["reset", "--hard", HEAD])
+def npm_shrink(config, table, tag=None, release=False):
+  replace_deps(config, table, "dependencies", tag, not release)
+  replace_deps(config, table, "devDependencies", tag, not release)
+  return {
+    version: config['version'],
+    dependencies: config['dependencies'],
+    devDependencies: config['devDependencies'],
+  }
 
 def create_branch(root_dir, config, branch_name):
   for m in config["modules"]:
