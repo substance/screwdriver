@@ -177,7 +177,8 @@ class ScrewDriver(object):
     if "node_modules" in config:
       table.update(config["node_modules"])
     conf = get_module_config(self.root_dir, ".")
-    create_package(".", conf, table, tag=None)
+    doInit = (args["package"] == "init")
+    create_package(".", conf, table, tag=None, init=doInit)
 
   def tag(self, args=None):
     print("Updating project.json...")

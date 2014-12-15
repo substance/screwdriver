@@ -130,10 +130,23 @@ def replace_deps(config, table, deps, tag=None):
       if deps[dep] == "":
         raise RuntimeError("Incomplete specification %s in %s"%(dep, config["name"]));
 
-def create_package(folder, config, table, tag=None):
+def create_package(folder, config, table, tag=None, init=False):
   """
     Creates 'package.json' based on 'module.json'.
   """
+
+  if init:
+    pendingDeps = set(table.keys())
+    if "dependencies" in config:
+      pendingDeps = pendingDeps - set(config["dependencies"].keys())
+    if "devDependencies":
+      pendingDeps = pendingDeps - set(config["devDependencies"].keys())
+    # extend dependecies section with dependencies that are in configuration
+    for dep in pendingDeps:
+      # only consider 'node_modules'
+      if dep in table and table[dep]["folder"].startswith('node_modules'):
+        config["dependencies"][dep] = ""
+
   replace_deps(config, table, "dependencies", tag)
   replace_deps(config, table, "devDependencies", tag)
   filename = os.path.join(folder, "package.json")
