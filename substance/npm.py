@@ -38,7 +38,9 @@ def npm_build(root, module):
   if os.path.exists(os.path.join(module_dir, "package.json")):
     print("Building node-module: %s" %module["folder"])
     cmd = ["npm", "install"]
-    p = subprocess.Popen(cmd, cwd=module_dir)
+    # HACK: under Windows npm can only be run with shell (npm.cmd)
+    shell = (os.name == "nt")
+    p = subprocess.Popen(cmd, cwd=module_dir, shell=shell)
     p.communicate();
 
 def npm_symlinks(root, module):
@@ -64,12 +66,16 @@ def npm_install(root, node_modules):
       # skip modules with version == None
       continue
     cmd = ["npm", "install", "%s@%s"%(m, v)]
-    p = subprocess.Popen(cmd, cwd=root)
+    # HACK: under Windows npm can only be run with shell (npm.cmd)
+    shell = (os.name == "nt")
+    p = subprocess.Popen(cmd, cwd=root, shell=shell)
     p.communicate();
 
 def npm_ls(root):
     cmd = ["npm", "ls"]
-    p = subprocess.Popen(cmd, cwd=root)
+    # HACK: under Windows npm can only be run with shell (npm.cmd)
+    shell = (os.name == "nt")
+    p = subprocess.Popen(cmd, cwd=root, shell=shell)
     p.communicate();
 
 def node_server(root, args):
