@@ -234,6 +234,8 @@ class ScrewDriver(object):
     if "bundle" in config:
       bundle_config = config["bundle"]
 
+      shell = (os.name == "nt")
+
       print("Bundling....");
       name = bundle_config["name"]
       dist_folder = os.path.abspath(os.path.join(self.root_dir, bundle_config["folder"]))
@@ -263,7 +265,7 @@ class ScrewDriver(object):
       cmd = ["browserify", boot_script, "-o", bundled_script] + browserify_options
 
       print(" ".join(cmd))
-      p = subprocess.Popen(cmd, cwd=self.root_dir)
+      p = subprocess.Popen(cmd, cwd=self.root_dir, shell=shell)
       p.communicate()
 
       # uglifying
@@ -271,7 +273,7 @@ class ScrewDriver(object):
         uglifyjs_options = ["-c", "-m"]
         cmd = ["uglifyjs", bundled_script, "-o", bundled_script] + uglifyjs_options
         print(" ".join(cmd))
-        p = subprocess.Popen(cmd, cwd=self.root_dir)
+        p = subprocess.Popen(cmd, cwd=self.root_dir, shell=shell)
         p.communicate()
 
       # process the template index file
