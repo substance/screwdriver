@@ -74,6 +74,11 @@ class ScrewDriver(object):
         git_checkout(self.root_dir, m)
       git_pull(self.root_dir, m)
 
+    self.install(args)
+
+  def install(self, args=None):
+    config = self.get_project_config()
+
     # 2. Install all shared node modules
     node_modules = config["node_modules"] if "node_modules" in config else {}
     for __, folder, conf in iterate_modules(self.root_dir, config):
