@@ -7,7 +7,7 @@ from distutils import file_util, dir_util
 import copy
 
 from util import read_json, write_json, project_file, package_file
-from git import git_pull, git_push, git_checkout, git_command, git_status, git_fetch, git_current_sha
+from git import git_pull, git_push, git_checkout, git_command, git_status, git_fetch, git_current_sha, git_get_current_branch
 from npm import npm_publish, npm_install, node_server, npm_ls, npm_shrinkwrap
 from version import increment_version, bump_version, create_package
 
@@ -41,7 +41,7 @@ def get_configured_deps(conf, devDependencies=False):
         result[dep] = version
 
   if devDependencies and "devDependencies" in conf:
-    for dep, version in conf["dependencies"].iteritems():
+    for dep, version in conf["devDependencies"].iteritems():
       if version != "":
         result[dep] = version
 
@@ -53,8 +53,8 @@ class ScrewDriver(object):
     self.root_dir = root_dir
     self.project_config = None
 
-  def get_project_config(self):
-    if self.project_config == None:
+  def get_project_config(self, reload=False):
+    if self.project_config == None or reload == True:
       self.project_config = read_json(project_file(self.root_dir))
       for m in self.project_config["modules"]:
         m['repoName'] = os.path.basename(m['repository'])
@@ -66,7 +66,16 @@ class ScrewDriver(object):
     write_json(project_file(self.root_dir), project_config)
 
   def update(self, args=None):
-    config = self.get_project_config()
+    # Update the root folder first
+    root_config = git_get_current_branch(self.root_dir)
+    if not root_config:
+      print("Not a git repository")
+      return
+    git_fetch(self.root_dir, root_config)
+    git_checkout(self.root_dir, root_config)
+    git_pull(self.root_dir, root_config)
+
+    config = self.get_project_config(reload=True)
     for m in config["modules"]:
       module_dir = os.path.join(self.root_dir, m["folder"])
       if os.path.exists(module_dir):

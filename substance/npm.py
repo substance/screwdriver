@@ -65,6 +65,7 @@ def npm_install(root, node_modules):
     if v == None:
       # skip modules with version == None
       continue
+    print("   Installing %s:%s"%(m,v))
     cmd = ["npm", "install", "%s@%s"%(m, v)]
     # HACK: under Windows npm can only be run with shell (npm.cmd)
     shell = (os.name == "nt")

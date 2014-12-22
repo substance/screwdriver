@@ -1,6 +1,14 @@
 import subprocess
+from subprocess import Popen, PIPE
 import os
 from gitstatus import gitstatus
+
+def _Popen(cmd, stdout=None, stderr=None, cwd=None):
+  startupinfo = None
+  if os.name == 'nt':
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+  return subprocess.Popen(cmd, stdout=stdout, stderr=stderr, cwd=cwd, startupinfo=startupinfo)
 
 def git_pull(root, module):
   module_dir = os.path.join(root, module["folder"])
@@ -80,6 +88,26 @@ def git_status(root, module, porcelain=True):
     print("%s" %name)
     print("--------\n")
     print(out)
+
+def git_get_current_branch(root_dir):
+  git_command = 'git'
+  gitsym = _Popen([git_command, 'symbolic-ref', 'HEAD'], stdout=PIPE, stderr=PIPE, cwd=root_dir)
+  branch, error = gitsym.communicate()
+  error_string = error.decode('utf-8')
+  if 'fatal: Not a git repository' in error_string:
+    return None
+  branch = branch.decode('utf-8').strip()[11:]
+  if not branch: # not on any branch
+    return None
+  print("###### %s"%branch)
+  remote_name = _Popen([git_command,'config','branch.%s.remote' % branch], stdout=PIPE, cwd=root_dir).communicate()[0].strip()
+  if not remote_name:
+    return None
+  return {
+    "folder": root_dir,
+    "remote": remote_name,
+    "branch": branch
+  }
 
 def git_current_sha(root, module):
   module_dir = os.path.join(root, module["folder"])
