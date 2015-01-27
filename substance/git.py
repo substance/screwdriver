@@ -115,3 +115,8 @@ def git_current_sha(root, module):
   p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=module_dir)
   out, err = p.communicate()
   return out.strip()
+
+def git_add_submodule(root, module):
+  cmd = ["git", "submodule", "add", "-f",  module["repository"], module["folder"]]
+  p = subprocess.Popen(cmd, cwd=root)
+  p.communicate()

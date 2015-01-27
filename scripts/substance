@@ -22,6 +22,7 @@ parser.add_argument('--shrinkwrap', nargs='?', const=None, default=False, help='
 parser.add_argument('--tag', nargs='?', const=None, default=False, help='Create a new tag. Adaptes project.json and creates an npm-shrinkwrap file with exact current SHAs for sub-modules.')
 parser.add_argument('--bundle', nargs='?', const=None, default=False, help='Create a bundle using the configuration given in "project.json". Options: "nominify,sourcemap"')
 parser.add_argument('--each', nargs='?', const=True, default=False, help='Run something for each module "substance --each -- echo \"$module\".')
+parser.add_argument('--submodules', nargs='?', const=None, default=False, help='Add dependencies as submodules.')
 parser.add_argument('argv', nargs='*', help='Arguments passed to the command.')
 
 # Main
@@ -40,6 +41,8 @@ elif args["tag"] != False:
  action = "tag"
 elif args['each'] != False:
   action = "each"
+if args["submodules"] != False:
+  action = "submodules"
 elif action == None:
   action = "serve"
 

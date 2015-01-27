@@ -7,7 +7,7 @@ from distutils import file_util, dir_util
 import copy
 
 from util import read_json, write_json, project_file, package_file
-from git import git_pull, git_push, git_checkout, git_command, git_status, git_fetch, git_current_sha, git_get_current_branch
+from git import git_pull, git_push, git_checkout, git_command, git_status, git_fetch, git_current_sha, git_get_current_branch, git_add_submodule
 from npm import npm_publish, npm_install, node_server, npm_ls, npm_shrinkwrap
 from version import increment_version, bump_version, create_package
 
@@ -231,6 +231,11 @@ class ScrewDriver(object):
 
   def serve(self, args=None):
     node_server(self.root_dir, args)
+
+  def submodules(self, args=None):
+    config = self.get_project_config()
+    for m in config["modules"]:
+      git_add_submodule(self.root_dir, m)
 
   def bundle(self, args=None):
     config = self.get_project_config()
