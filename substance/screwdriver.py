@@ -70,10 +70,10 @@ class ScrewDriver(object):
     root_config = git_get_current_branch(self.root_dir)
     if not root_config:
       print("Not a git repository")
-      return
-    git_fetch(self.root_dir, root_config)
-    git_checkout(self.root_dir, root_config)
-    git_pull(self.root_dir, root_config)
+    else:
+      git_fetch(self.root_dir, root_config)
+      git_checkout(self.root_dir, root_config)
+      git_pull(self.root_dir, root_config)
 
     config = self.get_project_config(reload=True)
     for m in config["modules"]:
