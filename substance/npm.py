@@ -48,9 +48,7 @@ def npm_symlinks(root, module):
   module_config_file = os.path.join(module_dir, "package.json");
   if os.path.exists(module_config_file):
     module_config = read_json(module_config_file)
-
     deps = []
-
     if ("dependencies" in module_config):
       deps += [dep for dep in module_config["dependencies"] if dep.startswith("substance")]
 
@@ -65,8 +63,13 @@ def npm_install(root, node_modules):
     if v == None:
       # skip modules with version == None
       continue
-    print("   Installing %s:%s"%(m,v))
-    cmd = ["npm", "install", "%s@%s"%(m, v)]
+    module_dir = os.path.join(root, 'node_modules', m)
+    if os.path.exists(module_dir):
+      print("   Updating %s:%s"%(m,v))
+      cmd = ["npm", "update", "%s@%s"%(m, v)]
+    else:
+      print("   Installing %s:%s"%(m,v))
+      cmd = ["npm", "install", "%s@%s"%(m, v)]
     # HACK: under Windows npm can only be run with shell (npm.cmd)
     shell = (os.name == "nt")
     p = subprocess.Popen(cmd, cwd=root, shell=shell)

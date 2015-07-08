@@ -66,6 +66,10 @@ class ScrewDriver(object):
     write_json(project_file(self.root_dir), project_config)
 
   def update(self, args=None):
+    self.clone(args);
+    self.install(args)
+
+  def clone(self, args=None):
     # Update the root folder first
     root_config = git_get_current_branch(self.root_dir)
     if not root_config:
@@ -83,12 +87,10 @@ class ScrewDriver(object):
         git_checkout(self.root_dir, m)
       git_pull(self.root_dir, m)
 
-    self.install(args)
-
   def install(self, args=None):
     config = self.get_project_config()
 
-    # 2. Install all shared node modules
+    # Install all shared node modules
     node_modules = config["node_modules"] if "node_modules" in config else {}
     for __, folder, conf in iterate_modules(self.root_dir, config):
       # remove all managed modules from the install list to avoid npm reinstalling them
@@ -123,6 +125,14 @@ class ScrewDriver(object):
       git_status(self.root_dir, m)
 
   def pull(self, args=None):
+    # Update the root folder first
+    root_config = git_get_current_branch(self.root_dir)
+    if not root_config:
+      print("Not a git repository")
+    else:
+      git_fetch(self.root_dir, root_config)
+      git_pull(self.root_dir, root_config)
+
     config = self.get_project_config()
     for m in config["modules"]:
       git_fetch(self.root_dir, m)
