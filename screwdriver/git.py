@@ -10,11 +10,10 @@ def _Popen(cmd, stdout=None, stderr=None, cwd=None):
     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
   return subprocess.Popen(cmd, stdout=stdout, stderr=stderr, cwd=cwd, startupinfo=startupinfo)
 
-def git_pull(root, module):
-  module_dir = os.path.join(root, module["folder"])
-
+def git_pull(module):
+  module_dir = module["path"]
   if not os.path.exists(module_dir):
-    print("Cloning sub-module: %s" %module["folder"])
+    print("Cloning module: %s" %module_dir)
     parent_dir, name = os.path.split(module_dir)
 
     if not os.path.exists(parent_dir):
@@ -31,12 +30,12 @@ def git_pull(root, module):
 
   else:
     cmd = ["git", "pull", "origin", module["branch"]]
-    print("Pulling sub-module: %s, (%s)" %(module["folder"], " ".join(cmd)))
+    print("Pulling module: %s, (%s)" %(module_dir, " ".join(cmd)))
     p = subprocess.Popen(cmd, cwd=module_dir)
     p.communicate()
 
-def git_push(root, module, options):
-  module_dir = os.path.join(root, module["folder"])
+def git_push(module, options={}):
+  module_dir = module["path"]
   if 'remote' in options:
     remote = options['remote']
   else:
@@ -46,50 +45,36 @@ def git_push(root, module, options):
   stat = gitstatus(module_dir)
 
   if (stat['ahead'] > 0):
-    print( "Pushing sub-module %s to %s" %( module["folder"], remote) )
+    print( "Pushing module %s to %s" %(module_dir, remote) )
     cmd = ["git", "push", remote, module["branch"]]
     p = subprocess.Popen(cmd, cwd=module_dir)
     p.communicate()
   else:
-    print("Sub-module %s is already up-to-date."%( module["folder"] ))
+    print("Module %s is already up-to-date."%module_dir)
 
-def git_checkout(root, module):
-  module_dir = os.path.join(root, module["folder"])
+def git_checkout(module):
+  module_dir = module["path"]
   branch = module["branch"]
-
-  print("git checkout", branch)
+  print("Checking out '%s' in %s"%(branch, module_dir))
   cmd = ["git", "checkout", branch]
   p = subprocess.Popen(cmd, cwd=module_dir)
   p.communicate()
 
-def git_fetch(root, module):
-  module_dir = os.path.join(root, module["folder"])
+def git_fetch(module):
+  module_dir = module["path"]
   branch = module["branch"]
   cmd = ["git", "fetch", "origin"]
   p = subprocess.Popen(cmd, cwd=module_dir)
   p.communicate()
 
-def git_command(root, module, argv):
-  module_dir = os.path.join(root, module["folder"])
-  cmd = ["git"] + argv
-  print("%s $ git command: %s"%(module["folder"], cmd))
-  p = subprocess.Popen(cmd, cwd=module_dir)
-  p.communicate()
-
-def git_status(root, module, porcelain=True):
+def git_status(module, porcelain=True):
   cmd = ["git", "status"]
   if porcelain:
     cmd.append("--porcelain")
-  p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=os.path.join(root, module["folder"]))
+  p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=module["path"])
   out, err = p.communicate()
-
-  name = os.path.basename(module["folder"])
-  if name == ".":
-    name = "Mama Mia!"
-
   if len(out) > 0:
-
-    print("%s" %name)
+    print("%s" %module["path"])
     print("--------\n")
     print(out)
 
@@ -103,24 +88,18 @@ def git_get_current_branch(root_dir):
   branch = branch.decode('utf-8').strip()[11:]
   if not branch: # not on any branch
     return None
-  print("###### %s"%branch)
   remote_name = _Popen([git_command,'config','branch.%s.remote' % branch], stdout=PIPE, cwd=root_dir).communicate()[0].strip()
   if not remote_name:
     return None
   return {
-    "folder": root_dir,
+    "path": root_dir,
     "remote": remote_name,
     "branch": branch
   }
 
-def git_current_sha(root, module):
-  module_dir = os.path.join(root, module["folder"])
+def git_current_sha(module):
+  module_dir = module["path"]
   cmd = ["git", "rev-parse", "HEAD"]
   p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=module_dir)
   out, err = p.communicate()
   return out.strip()
-
-def git_add_submodule(root, module):
-  cmd = ["git", "submodule", "add", "-f",  module["repository"], module["folder"]]
-  p = subprocess.Popen(cmd, cwd=root)
-  p.communicate()

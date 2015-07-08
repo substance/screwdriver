@@ -1,7 +1,7 @@
 from distutils.core import setup
 setup(
-  name='substance',
+  name='screwdriver',
   version='1.0',
-  scripts=['scripts/substance'],
-  packages = ['substance'],
+  scripts=['scripts/screwdriver'],
+  packages = ['screwdriver'],
 )
