@@ -58,7 +58,7 @@ def read_module_config(root, config, is_root):
           "type": "git",
           "name": name,
           "path": module_dir,
-          "repo": match.group(1) + "/" + match.group(2) + ".git",
+          "repository": match.group(1) + "/" + match.group(2) + ".git",
           "branch": match.group(3),
           "modules": {}
         }

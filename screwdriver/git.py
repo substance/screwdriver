@@ -20,7 +20,7 @@ def git_pull(module):
       print("Creating folder: %s" %parent_dir)
       os.makedirs(parent_dir)
 
-    cmd = ["git", "clone", module["repository"], name]
+    cmd = ["git", "clone", "git@github.com:"+module["repository"], name]
     p = subprocess.Popen(cmd, cwd=parent_dir)
     p.communicate()
 
