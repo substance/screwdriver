@@ -51,3 +51,22 @@ You can remove all files using:
     $ cd screwdriver
     $ sudo rm $(cat screwdriver.files)
 ```
+
+Branch and Merge Workflow
+-------------------------
+
+1. `git checkout -b :branch_name`
+
+2. Adapt `package.json` if you want to switch to a dev branch of a module (optional)
+
+3. `screwdriver --update` (necessary after switching a branch of a module)
+
+4. Do development
+
+5. Bump module shas (optional)
+
+6. Merge changes back into master
+
+7. Commit and push changes
+
+8. `screwdriver --update` (necessary if you were on a branch of a module)
