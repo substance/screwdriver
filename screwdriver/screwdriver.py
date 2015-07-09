@@ -37,13 +37,12 @@ class ScrewDriver(object):
           # clone the repository
           git_pull(module)
           read_module_config(module["path"], module, False)
-          if len(module["modules"]) > 0:
-            self._update(module, args)
         else:
           # pull the repo
           git_fetch(module)
           git_checkout(module)
           git_pull(module)
+        self._update_git_modules(module, args)
 
   def update(self, args=None):
     # Update the root folder first

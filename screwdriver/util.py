@@ -25,8 +25,7 @@ def write_json(filename, data):
     json.dump(data, f, indent=2, separators=(',', ': '))
 
 REPO_ID = "([a-zA-Z0-9_-]+)"
-
-GIT_REPO_EXPRESSION = re.compile(REPO_ID+"/"+REPO_ID+"(?:#"+REPO_ID+")?")
+GIT_REPO_EXPRESSION = re.compile(REPO_ID+"/"+REPO_ID+"(?:.git)?"+"(?:#"+REPO_ID+")?")
 SHA1_EXPRESSION = re.compile("[a-fA-F0-9]{40}");
 
 def read_module_config(root, config, is_root):
