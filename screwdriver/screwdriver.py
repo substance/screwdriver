@@ -1,11 +1,19 @@
 #!/usr/bin/python
 import os
-import shutil
+import errno, stat, shutil
 
 from util import read_json, read_project_config, read_module_config, assert_module_clean
 from git import git_pull, git_checkout, git_status, git_fetch, git_current_sha, git_get_current_branch
 from npm import npm_install, npm_ls
 from logger import log, indent, dedent
+
+def handleRemoveReadonly(func, path, exc):
+  excvalue = exc[1]
+  if func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
+      os.chmod(path, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO) # 0777
+      func(path)
+  else:
+      raise
 
 class ScrewDriver(object):
 
@@ -39,7 +47,7 @@ class ScrewDriver(object):
           assert_module_clean(module)
           # remove the module directory (otherwise we can not run npm install)
           log("...removing repository")
-          shutil.rmtree(module["path"])
+          shutil.rmtree(module["path"], ignore_errors=False, onerror=handleRemoveReadonly)
         # install (or update)
         npm_install(config["path"], module)
       elif module["type"] == "git":
@@ -50,7 +58,7 @@ class ScrewDriver(object):
           log("Found npm installed module for %s. Will replace it with 'git clone'."%module["path"])
           # remove the existing one
           log("...removing module")
-          shutil.rmtree(module["path"])
+          shutil.rmtree(module["path"], ignore_errors=False, onerror=handleRemoveReadonly)
           # and reinstall using git clone
           git_pull(module)
           read_module_config(module, False)
