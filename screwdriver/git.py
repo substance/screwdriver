@@ -26,16 +26,20 @@ def git_pull(module):
       raise Exception(msg)
     git_checkout(module)
   else:
-    git_fetch(module)
-    git_checkout(module)
-    cmd = ["git", "pull", "-q", "origin", module["branch"]]
-    log("Pulling module: %s, (%s)" %(module_dir, " ".join(cmd)))
-    p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=module_dir)
-    out, error = p.communicate()
-    if error != "":
-      msg = "Could not pull from repository: %s"%module
-      print_error(msg, error)
-      raise Exception(msg)
+    # Note: for example, when a branch exists only locally we can't pull as there is no remote
+    if module["remote"] == None:
+      log("Warning: repository is not connected to remote.%s"%module)
+    else:
+      git_fetch(module)
+      git_checkout(module)
+      cmd = ["git", "pull", "-q", "origin", module["branch"]]
+      log("Pulling module: %s, (%s)" %(module_dir, " ".join(cmd)))
+      p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=module_dir)
+      out, error = p.communicate()
+      if error != "":
+        msg = "Could not pull from repository: %s"%module
+        print_error(msg, error)
+        raise Exception(msg)
 
 def git_checkout(module):
   module_dir = module["path"]
@@ -77,13 +81,13 @@ def git_get_current_branch(root_dir):
   branch, error = gitsym.communicate()
   error_string = error.decode('utf-8')
   if 'fatal: Not a git repository' in error_string:
-    return None
+    raise Exception('Not a git repository!')
   branch = branch.decode('utf-8').strip()[11:]
   if not branch: # not on any branch
-    return None
+    raise Exception('Could not extract current branch name.')
   remote_name = exec_command([git_command,'config','branch.%s.remote' % branch], stdout=PIPE, cwd=root_dir).communicate()[0].strip()
-  if not remote_name:
-    return None
+  if remote_name == "":
+    remote_name = None
   return {
     "path": root_dir,
     "remote": remote_name,

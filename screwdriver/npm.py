@@ -74,7 +74,7 @@ def npm_install(root, module):
     shell = (os.name == "nt")
     p = exec_command(cmd, cwd=root, stdout=PIPE, stderr=PIPE, shell=shell)
     out, error = p.communicate();
-    if error != None:
+    if error != "":
       print(error)
   elif module["type"] == "git":
     for name, sub_module in module["modules"].iteritems():

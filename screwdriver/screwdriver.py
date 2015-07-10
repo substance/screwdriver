@@ -31,6 +31,8 @@ class ScrewDriver(object):
     indent()
     for name, module in config["modules"].iteritems():
       if module["type"] == "npm":
+        if "no-npm" in args:
+          continue
         if os.path.exists(module["path"]) and os.path.exists(os.path.join(module["path"], '.git')):
           log("Found git repository for %s. Will replace it with 'npm install'."%module["path"])
           # check if it is deeply clean
@@ -43,7 +45,7 @@ class ScrewDriver(object):
       elif module["type"] == "git":
         if not os.path.exists(module["path"]):
           git_pull(module)
-          read_module_config(module["path"], module, False)
+          read_module_config(module, False)
         elif not os.path.exists(os.path.join(module["path"], '.git')):
           log("Found npm installed module for %s. Will replace it with 'git clone'."%module["path"])
           # remove the existing one
@@ -68,18 +70,17 @@ class ScrewDriver(object):
       git_pull(root_config)
     config = self.get_project_config(reload=True)
     self._update_modules(config, args)
-    #npm_ls(root_config["path"])
 
-  def pull(self, args=None):
+  def pull(self, args={}):
     # Update the root folder first
     root_config = git_get_current_branch(self.root_dir)
     if not root_config:
       log("Not a git repository")
     else:
-      git_fetch(root_config)
       git_pull(root_config)
     config = self.get_project_config()
-    self._update_git_modules(config, args)
+    args["no-npm"] = True
+    self._update_modules(config, args)
 
   def checkout(self, args=None):
     config = self.get_project_config()

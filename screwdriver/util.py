@@ -50,23 +50,25 @@ def read_module_config(module, is_root=False):
     module_dir = os.path.join(root, 'node_modules', name);
     if match:
       # only take over modules with a non SHA-1 version
-      if match.group(3) and SHA1_EXPRESSION.match(match.group(3)):
+      if os.path.exists(os.path.join(module_dir, '.git')):
+        childConfig = git_get_current_branch(module_dir)
+        childConfig["name"] = name
+        childConfig["version"] = version
+      else:
         childConfig = {
-          "type": "npm",
-          "name": name,
           "path": module_dir,
-          "version": version
+          "name": name,
+          "version": version,
         }
+      # Install repos with SHA version with npm
+      if match.group(3) and SHA1_EXPRESSION.match(match.group(3)):
+        childConfig["type"] = "npm"
       else:
         module_dir = os.path.join(root, 'node_modules', name);
-        childConfig = {
-          "type": "git",
-          "name": name,
-          "path": module_dir,
-          "repository": match.group(1) + "/" + match.group(2) + ".git",
-          "branch": match.group(3),
-          "modules": {}
-        }
+        childConfig["type"] = "git"
+        childConfig["repository"] = "%s/%s.git"%(match.group(1), match.group(2))
+        childConfig["branch"] = match.group(3)
+        childConfig["modules"] = {}
         if (os.path.exists(os.path.join(module_dir, '.git'))):
           read_module_config(childConfig, False)
         else:
