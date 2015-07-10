@@ -27,7 +27,6 @@ def gitstatus(folder, git_command='git', plain_only=False):
       startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
     return subprocess.Popen(cmd, stdout=stdout, stderr=stderr, cwd=folder, startupinfo=startupinfo)
 
-
   if (plain_only):
     status_plain = _Popen([git_command, 'status'], stdout=PIPE).communicate()[0]
     return {

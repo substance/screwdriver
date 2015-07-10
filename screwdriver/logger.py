@@ -8,7 +8,7 @@ def indent():
 
 def dedent():
   global level
-  level = level+1
+  level = level-1
 
 def log(msg):
   global level

@@ -1,8 +1,9 @@
-import subprocess
+from subprocess import PIPE
 import os
 import re
 from util import read_json, package_file, get_dependencies, GIT_REPO_EXPRESSION
 from logger import log
+from exec_command import exec_command
 
 # ^1.2.3  ~= 1.x.x
 # ~1.2.3  ~= 1.2.x
@@ -71,8 +72,10 @@ def npm_install(root, module):
       cmd = ["npm", "install", "%s@%s"%(name, version)]
     # HACK: under Windows npm can only be run with shell (npm.cmd)
     shell = (os.name == "nt")
-    p = subprocess.Popen(cmd, cwd=root, shell=shell)
-    p.communicate();
+    p = exec_command(cmd, cwd=root, stdout=PIPE, stderr=PIPE, shell=shell)
+    out, error = p.communicate();
+    if error != None:
+      print(error)
   elif module["type"] == "git":
     for name, sub_module in module["modules"].iteritems():
       npm_install(module["path"], sub_module)

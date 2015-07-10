@@ -1,78 +1,70 @@
-import subprocess
-from subprocess import Popen, PIPE
 import os
 from gitstatus import gitstatus
 from logger import log
+from exec_command import exec_command
+from subprocess import PIPE
 
-def _Popen(cmd, stdout=None, stderr=None, cwd=None):
-  startupinfo = None
-  if os.name == 'nt':
-    startupinfo = subprocess.STARTUPINFO()
-    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-  return subprocess.Popen(cmd, stdout=stdout, stderr=stderr, cwd=cwd, startupinfo=startupinfo)
+def print_error(msg, error):
+  print("###################   ERROR   ###################")
+  print(msg)
+  print(error)
 
 def git_pull(module):
   module_dir = module["path"]
   if not os.path.exists(module_dir):
     log("Cloning module: %s" %module_dir)
     parent_dir, name = os.path.split(module_dir)
-
     if not os.path.exists(parent_dir):
       log("Creating folder: %s" %parent_dir)
       os.makedirs(parent_dir)
-
-    cmd = ["git", "clone", "git@github.com:"+module["repository"], name]
-    p = subprocess.Popen(cmd, cwd=parent_dir)
-    p.communicate()
-
-    cmd = ["git", "checkout", module["branch"]]
-    p = subprocess.Popen(cmd, cwd=os.path.join(parent_dir, name))
-    p.communicate()
-
+    cmd = ["git", "clone", "-q", "git@github.com:"+module["repository"], name]
+    p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=parent_dir)
+    out, error = p.communicate()
+    if error != "":
+      msg = "Could not clone repository: %s"%module["repository"]
+      print_error(msg, error)
+      raise Exception(msg)
+    git_checkout(module)
   else:
-    cmd = ["git", "pull", "origin", module["branch"]]
+    git_fetch(module)
+    git_checkout(module)
+    cmd = ["git", "pull", "-q", "origin", module["branch"]]
     log("Pulling module: %s, (%s)" %(module_dir, " ".join(cmd)))
-    p = subprocess.Popen(cmd, cwd=module_dir)
-    p.communicate()
-
-def git_push(module, options={}):
-  module_dir = module["path"]
-  if 'remote' in options:
-    remote = options['remote']
-  else:
-    remote = 'origin'
-
-  # only push if there are local changes
-  stat = gitstatus(module_dir)
-
-  if (stat['ahead'] > 0):
-    log( "Pushing module %s to %s" %(module_dir, remote) )
-    cmd = ["git", "push", remote, module["branch"]]
-    p = subprocess.Popen(cmd, cwd=module_dir)
-    p.communicate()
-  else:
-    log("Module %s is already up-to-date."%module_dir)
+    p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=module_dir)
+    out, error = p.communicate()
+    if error != "":
+      msg = "Could not pull from repository: %s"%module
+      print_error(msg, error)
+      raise Exception(msg)
 
 def git_checkout(module):
   module_dir = module["path"]
   branch = module["branch"]
   log("Checking out '%s' in %s"%(branch, module_dir))
-  cmd = ["git", "checkout", branch]
-  p = subprocess.Popen(cmd, cwd=module_dir)
-  p.communicate()
+  cmd = ["git", "checkout", "-q", branch]
+  p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=module_dir)
+  out, error = p.communicate()
+  if error != "":
+    msg = "Could not checkout branch: %s"%module["branch"]
+    print_error(msg, error)
+    raise Exception(msg)
 
 def git_fetch(module):
   module_dir = module["path"]
   branch = module["branch"]
   cmd = ["git", "fetch", "origin"]
-  p = subprocess.Popen(cmd, cwd=module_dir)
-  p.communicate()
+  p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=module_dir)
+  out, error = p.communicate()
+  if error != "":
+    msg = "Could not fetch from repository: %s"%module
+    print_error(msg, error)
+    raise Exception(msg)
 
 def git_status(module, porcelain=True):
   cmd = ["git", "status"]
   if porcelain:
     cmd.append("--porcelain")
-  p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=module["path"])
+  p = exec_command(cmd, stdout=PIPE, cwd=module["path"])
   out, err = p.communicate()
   if len(out) > 0:
     print("%s" %module["path"])
@@ -81,7 +73,7 @@ def git_status(module, porcelain=True):
 
 def git_get_current_branch(root_dir):
   git_command = 'git'
-  gitsym = _Popen([git_command, 'symbolic-ref', 'HEAD'], stdout=PIPE, stderr=PIPE, cwd=root_dir)
+  gitsym = exec_command([git_command, 'symbolic-ref', 'HEAD'], stdout=PIPE, stderr=PIPE, cwd=root_dir)
   branch, error = gitsym.communicate()
   error_string = error.decode('utf-8')
   if 'fatal: Not a git repository' in error_string:
@@ -89,7 +81,7 @@ def git_get_current_branch(root_dir):
   branch = branch.decode('utf-8').strip()[11:]
   if not branch: # not on any branch
     return None
-  remote_name = _Popen([git_command,'config','branch.%s.remote' % branch], stdout=PIPE, cwd=root_dir).communicate()[0].strip()
+  remote_name = exec_command([git_command,'config','branch.%s.remote' % branch], stdout=PIPE, cwd=root_dir).communicate()[0].strip()
   if not remote_name:
     return None
   return {
@@ -101,6 +93,6 @@ def git_get_current_branch(root_dir):
 def git_current_sha(module):
   module_dir = module["path"]
   cmd = ["git", "rev-parse", "HEAD"]
-  p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=module_dir)
+  p = exec_command(cmd, stdout=PIPE, cwd=module_dir)
   out, err = p.communicate()
   return out.strip()

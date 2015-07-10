@@ -4,8 +4,8 @@ import os
 import types
 from collections import OrderedDict
 from git import git_get_current_branch
-import subprocess
-from subprocess import Popen, PIPE
+from subprocess import PIPE
+from exec_command import exec_command
 from logger import log
 
 PACKAGE_FILE = "package.json"
@@ -67,8 +67,8 @@ def read_module_config(module, is_root=False):
           "branch": match.group(3),
           "modules": {}
         }
-        if (os.path.exists(module_dir)):
-          read_module_config(module_dir, childConfig, False)
+        if (os.path.exists(os.path.join(module_dir, '.git'))):
+          read_module_config(childConfig, False)
         else:
           childConfig["state"] = "missing"
     else:
@@ -91,15 +91,15 @@ def read_project_config(root):
 
 def assert_module_clean(module):
   cmd = ["git", "status", "--porcelain"]
-  p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=module["path"])
+  p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=module["path"])
   out, err = p.communicate()
   if len(out) > 0:
-    msg = "Module %s is not clean. Commit and push your changes first"%module["path"]
-    print("####################################################################")
-    print(msg)
+    msg = "Module is not clean: %s.\nCommit and push your changes first!\n"%module["path"]
+    print("")
+    print("ERROR: "+msg)
+    print("Uncommitted changes:")
     print(out)
-    print(err)
-    print("####################################################################")
+    print("")
     raise Exception(msg)
 
   module_config = read_module_config(module)
