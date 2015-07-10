@@ -66,7 +66,7 @@ def read_module_config(module, is_root=False):
       else:
         module_dir = os.path.join(root, 'node_modules', name);
         childConfig["type"] = "git"
-        childConfig["repository"] = "%s/%s.git"%(match.group(1), match.group(2))
+        childConfig["repository"] = "%s/%s"%(match.group(1), match.group(2))
         childConfig["branch"] = match.group(3)
         childConfig["modules"] = {}
         if (os.path.exists(os.path.join(module_dir, '.git'))):

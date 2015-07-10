@@ -17,7 +17,9 @@ def git_pull(module):
     if not os.path.exists(parent_dir):
       log("Creating folder: %s" %parent_dir)
       os.makedirs(parent_dir)
-    cmd = ["git", "clone", "-q", "git@github.com:"+module["repository"], name]
+    # TODO: it should be configurable whether the default should be https or ssh
+    #cmd = ["git", "clone", "-q", "git@github.com:"+module["repository"], name]
+    cmd = ["git", "clone", "-q", "https://github.com/"+module["repository"]+".git", name]
     p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=parent_dir)
     out, error = p.communicate()
     if error != "":
