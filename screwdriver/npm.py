@@ -9,7 +9,7 @@ from exec_command import exec_command
 # ~1.2.3  ~= 1.2.x
 # *
 
-VERSION_EXPRESSION = re.compile("(?P<mod>~|\^)?(?P<major>\d+)\.(?P<minor>\d+|x)\.(?P<patch>\d+|x)(?P<suffix>.*)")
+VERSION_EXPRESSION = re.compile("(?P<mod>~|\^)?(?P<major>\d+)\.(?P<minor>\d+|x)(?:\.(?P<patch>\d+|x)(?P<suffix>.*))?")
 
 class SemanticVersion():
   def __init__(self, versionStr):
@@ -28,10 +28,14 @@ class SemanticVersion():
         self.major = match.group('major')
         self.minor = match.group('minor')
       else:
-        self.major = match.group('major')
-        self.minor = match.group('minor')
-        self.patch = match.group('patch')
-        self.suffix = match.group('suffix')
+        if match.group('major') != None:
+          self.major = match.group('major')
+        if match.group('minor') != None:
+          self.minor = match.group('minor')
+        if match.group('patch') != None:
+          self.patch = match.group('patch')
+        if match.group('suffix') != None:
+          self.suffix = match.group('suffix')
     # log("### SemanticVersion %s: %s %s %s %s"%(versionStr, self.major, self.minor, self.patch, self.suffix))
 
   def isFullfilledBy(self, other):
