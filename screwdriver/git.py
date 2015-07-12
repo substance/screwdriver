@@ -58,7 +58,7 @@ def git_checkout(module):
 def git_fetch(module):
   module_dir = module["path"]
   branch = module["branch"]
-  cmd = ["git", "fetch", "origin"]
+  cmd = ["git", "fetch", "-q", "origin"]
   p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=module_dir)
   out, error = p.communicate()
   if error != "":
