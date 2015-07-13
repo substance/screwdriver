@@ -1,13 +1,20 @@
 import os
 from gitstatus import gitstatus
-from logger import log
+from logger import log, indent, dedent
 from exec_command import exec_command
-from subprocess import PIPE
+from subprocess import PIPE, Popen
 
 def print_error(msg, error):
   print("###################   ERROR   ###################")
   print(msg)
   print(error)
+
+def log_result(out, error):
+  indent()
+  lines = out.splitlines() + error.splitlines()
+  for line in lines:
+    log(line, ' ')
+  dedent()
 
 def git_pull(module):
   module_dir = module["path"]
@@ -18,11 +25,11 @@ def git_pull(module):
       log("Creating folder: %s" %parent_dir)
       os.makedirs(parent_dir)
     # TODO: it should be configurable whether the default should be https or ssh
-    #cmd = ["git", "clone", "-q", "git@github.com:"+module["repository"], name]
-    cmd = ["git", "clone", "-q", "https://github.com/"+module["repository"]+".git", name]
+    #cmd = ["git", "clone", "git@github.com:"+module["repository"], name]
+    cmd = ["git", "clone", "https://github.com/"+module["repository"]+".git", name]
     p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=parent_dir)
     out, error = p.communicate()
-    if error != "":
+    if p.returncode != 0:
       msg = "Could not clone repository: %s"%module["repository"]
       print_error(msg, error)
       raise Exception(msg)
@@ -34,23 +41,25 @@ def git_pull(module):
     else:
       git_fetch(module)
       git_checkout(module)
-      cmd = ["git", "pull", "-q", "origin", module["branch"]]
+      cmd = ["git", "pull", "origin", module["branch"]]
       log("Pulling module: %s, (%s)" %(module_dir, " ".join(cmd)))
       p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=module_dir)
       out, error = p.communicate()
-      if error != "":
+      if p.returncode != 0:
         msg = "Could not pull from repository: %s"%module
         print_error(msg, error)
         raise Exception(msg)
+      else:
+        log_result(out, error)
 
 def git_checkout(module):
   module_dir = module["path"]
   branch = module["branch"]
   log("Checking out '%s' in %s"%(branch, module_dir))
-  cmd = ["git", "checkout", "-q", branch]
+  cmd = ["git", "checkout", branch]
   p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=module_dir)
   out, error = p.communicate()
-  if error != "":
+  if p.returncode != 0:
     msg = "Could not checkout branch: %s"%module["branch"]
     print_error(msg, error)
     raise Exception(msg)
@@ -58,13 +67,15 @@ def git_checkout(module):
 def git_fetch(module):
   module_dir = module["path"]
   branch = module["branch"]
-  cmd = ["git", "fetch", "-q", "origin"]
+  cmd = ["git", "fetch", "origin"]
   p = exec_command(cmd, stdout=PIPE, stderr=PIPE, cwd=module_dir)
   out, error = p.communicate()
-  if error != "":
+  if p.returncode != 0:
     msg = "Could not fetch from repository: %s"%module
     print_error(msg, error)
     raise Exception(msg)
+  else:
+    log_result(out, error)
 
 def git_status(module, porcelain=True):
   cmd = ["git", "status"]

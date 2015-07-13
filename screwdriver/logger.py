@@ -10,6 +10,6 @@ def dedent():
   global level
   level = level-1
 
-def log(msg):
+def log(msg, character='.'):
   global level
-  print('{i} {m}'.format( i='..'*level, m=msg ))
+  print('{i} {m}'.format( i= character*2*level, m=msg ))
