@@ -24,7 +24,8 @@ def read_json(filename):
       return None
 
 REPO_ID = "([a-zA-Z0-9_-]+)"
-GIT_REPO_EXPRESSION = re.compile(REPO_ID+"/"+REPO_ID+"(?:.git)?"+"(?:#"+REPO_ID+")?")
+OPTIONAL_OAUTH_PREFIX = "(?:git\\+https://(?:[a-fA-F0-9]+:x-oauth-basic@)?github.com/)?"
+GIT_REPO_EXPRESSION = re.compile(OPTIONAL_OAUTH_PREFIX+REPO_ID+"/"+REPO_ID+"(?:.git)?"+"(?:#"+REPO_ID+")?")
 SHA1_EXPRESSION = re.compile("[a-fA-F0-9]{40}");
 
 def get_dependencies(module, is_root):
